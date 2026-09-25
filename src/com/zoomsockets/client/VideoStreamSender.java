@@ -19,13 +19,15 @@ public class VideoStreamSender implements Runnable {
 
     public VideoStreamSender() {
         webcam = Webcam.getDefault();
-        if (webcam != null) {
+        if (webcam == null) {
+            System.err.println("❌ No se encontró ninguna cámara web disponible.");
+        } else {
             webcam.setViewSize(WebcamResolution.QQVGA.getSize());
         }
         try {
-            // Inicializamos el socket UDP y la dirección del servidor (localhost o IP de red)
             udpSocket = new DatagramSocket();
-            serverAddress = InetAddress.getByName("localhost");
+            // Usa "localhost" si pruebas en la misma PC del servidor, o la IP "192.168.130.60" si estás en la otra laptop
+            serverAddress = InetAddress.getByName("192.168.130.60");
         } catch (Exception e) {
             System.err.println("❌ Error al inicializar el socket UDP de video: " + e.getMessage());
         }
@@ -33,19 +35,27 @@ public class VideoStreamSender implements Runnable {
 
     @Override
     public void run() {
-        if (webcam == null) return;
-        webcam.open();
+        if (webcam == null) {
+            System.err.println("❌ El hilo de video se detuvo porque la webcam es null.");
+            return;
+        }
+
+        try {
+            webcam.open();
+            System.out.println("📹 Cámara iniciada correctamente en el cliente.");
+        } catch (Exception e) {
+            System.err.println("❌ No se pudo abrir la cámara (quizás otra app la está usando): " + e.getMessage());
+            return;
+        }
 
         while (running) {
             try {
                 BufferedImage image = webcam.getImage();
                 if (image != null) {
                     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                        // Comprimir la imagen a formato JPG
                         ImageIO.write(image, "jpg", baos);
                         byte[] imageBytes = baos.toByteArray();
 
-                        // Enviar el fotograma directamente por UDP de forma rápida y sin bloqueo
                         if (udpSocket != null && serverAddress != null) {
                             DatagramPacket packet = new DatagramPacket(
                                     imageBytes,
@@ -57,8 +67,10 @@ public class VideoStreamSender implements Runnable {
                         }
                     }
                 }
-                Thread.sleep(100); // ~10 cuadros por segundo para mantener fluidez
+                Thread.sleep(100); // ~10 cuadros por segundo
             } catch (Exception e) {
+                System.err.println("❌ Error al enviar fotograma por UDP: " + e.getMessage());
+                e.printStackTrace();
                 break;
             }
         }

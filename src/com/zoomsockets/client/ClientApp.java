@@ -33,7 +33,7 @@ public class ClientApp extends JFrame {
         add(mainContainer);
 
         // Intentar conectar con el servidor automáticamente al abrir la aplicación
-        boolean connected = ClientService.getInstance().connect("127.0.0.1", 8080);
+        boolean connected = ClientService.getInstance().connect("192.168.130.60", 8080);
         if (!connected) {
             JOptionPane.showMessageDialog(this,
                     "No se pudo conectar al servidor. Asegúrate de ejecutar ServerApp primero.",

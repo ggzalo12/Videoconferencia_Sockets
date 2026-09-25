@@ -31,7 +31,7 @@ public class ClientService {
 
     public boolean connect(String ip, int port) {
         try {
-            socket = new Socket(ip, port);
+            socket = new Socket("192.168.130.60", 8080);
             out = new DataOutputStream(socket.getOutputStream());
             in = new DataInputStream(socket.getInputStream());
             running = true;
